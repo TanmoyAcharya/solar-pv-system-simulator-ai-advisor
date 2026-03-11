@@ -4,6 +4,7 @@ import math
 from calendar import monthrange
 from datetime import date
 from datetime import datetime
+from typing import Dict, Optional, Union
 
 from .models import SimulationResult, SystemInputs, WeatherProfile
 
@@ -131,7 +132,7 @@ def synthetic_hourly_generation(inputs: SystemInputs, monthly_generation_kwh: li
         month_totals[timestamp.month - 1] += weight
 
     hourly_generation: list[float] = []
-    for timestamp, weight in zip(datetimes, hourly_weights, strict=True):
+    for timestamp, weight in zip(datetimes, hourly_weights):
         month_index = timestamp.month - 1
         denominator = month_totals[month_index]
         if denominator <= 0:
@@ -150,7 +151,6 @@ def hourly_generation_from_weather(inputs: SystemInputs, weather_profile: Weathe
     for irradiance, ambient_temp in zip(
         weather_profile.hourly_irradiance_w_m2,
         weather_profile.hourly_temperature_c,
-        strict=True,
     ):
         hourly_generation.append(array_kw * (irradiance / 1000.0) * system_pr * temperature_factor(ambient_temp))
     return datetimes, hourly_generation
@@ -208,7 +208,7 @@ def tariff_rate_for_hour(inputs: SystemInputs, hour: int) -> float:
 
 def aggregate_by_month(datetimes: list[datetime], values: list[float]) -> list[float]:
     monthly = [0.0] * 12
-    for timestamp, value in zip(datetimes, values, strict=True):
+    for timestamp, value in zip(datetimes, values):
         monthly[timestamp.month - 1] += value
     return [round(value, 1) for value in monthly]
 
@@ -216,13 +216,13 @@ def aggregate_by_month(datetimes: list[datetime], values: list[float]) -> list[f
 def average_by_hour(datetimes: list[datetime], values: list[float]) -> list[float]:
     totals = [0.0] * 24
     counts = [0] * 24
-    for timestamp, value in zip(datetimes, values, strict=True):
+    for timestamp, value in zip(datetimes, values):
         totals[timestamp.hour] += value
         counts[timestamp.hour] += 1
     return [round(totals[hour] / max(counts[hour], 1), 2) for hour in range(24)]
 
 
-def run_battery_dispatch(inputs: SystemInputs, datetimes: list[datetime], generation: list[float], load: list[float]) -> dict[str, list[float] | float]:
+def run_battery_dispatch(inputs: SystemInputs, datetimes: list[datetime], generation: list[float], load: list[float]) -> Dict[str, Union[list[float], float]]:
     battery_capacity = max(0.0, inputs.battery_capacity_kwh)
     battery_power = max(0.0, inputs.battery_power_kw)
     reserve_soc = battery_capacity * 0.05
@@ -354,7 +354,7 @@ def run_battery_dispatch(inputs: SystemInputs, datetimes: list[datetime], genera
     }
 
 
-def simulate_system(inputs: SystemInputs, weather_profile: WeatherProfile | None = None) -> SimulationResult:
+def simulate_system(inputs: SystemInputs, weather_profile: Optional[WeatherProfile] = None) -> SimulationResult:
     monthly_shape = seasonal_profile(inputs.latitude)
     day_counts = monthly_days()
     system_pr = performance_ratio(inputs)
@@ -369,7 +369,7 @@ def simulate_system(inputs: SystemInputs, weather_profile: WeatherProfile | None
     irradiance_factor = clamp(inputs.peak_irradiance_w_m2 / 1000.0, 0.75, 1.15)
 
     baseline_monthly_generation_kwh: list[float] = []
-    for days, month_factor in zip(day_counts, monthly_shape, strict=True):
+    for days, month_factor in zip(day_counts, monthly_shape):
         generation = array_kw * inputs.avg_sun_hours * days * month_factor * irradiance_factor * system_pr * facing_factor
         baseline_monthly_generation_kwh.append(round(generation, 1))
 
@@ -399,11 +399,10 @@ def simulate_system(inputs: SystemInputs, weather_profile: WeatherProfile | None
         for baseline, import_cost, export_revenue in zip(
             aggregate_by_month(
                 datetimes,
-                [load * tariff_rate_for_hour(inputs, timestamp.hour) for load, timestamp in zip(hourly_load_kwh, datetimes, strict=True)],
+                [load * tariff_rate_for_hour(inputs, timestamp.hour) for load, timestamp in zip(hourly_load_kwh, datetimes)],
             ),
             monthly_import_cost,
             monthly_export_revenue,
-            strict=True,
         )
     ]
 
@@ -415,7 +414,7 @@ def simulate_system(inputs: SystemInputs, weather_profile: WeatherProfile | None
     annual_import_cost = round(sum(dispatch["import_cost"]), 2)
     annual_export_revenue = round(sum(dispatch["export_revenue"]), 2)
     baseline_annual_cost = round(
-        sum(load * tariff_rate_for_hour(inputs, timestamp.hour) for load, timestamp in zip(hourly_load_kwh, datetimes, strict=True)),
+        sum(load * tariff_rate_for_hour(inputs, timestamp.hour) for load, timestamp in zip(hourly_load_kwh, datetimes)),
         2,
     )
 

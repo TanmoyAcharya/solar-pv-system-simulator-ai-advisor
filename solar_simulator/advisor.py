@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 from math import ceil
+from typing import Dict, Optional, Union
 
 from .models import AdviceItem, AdvisorReport, SimulationResult, SystemInputs, WeatherProfile
 from .simulator import clamp, simulate_system
@@ -150,7 +151,7 @@ def build_advice_items(inputs: SystemInputs, result: SimulationResult, panel_tar
     return items
 
 
-def scenario_row(name: str, result: SimulationResult) -> dict[str, float | int | str]:
+def scenario_row(name: str, result: SimulationResult) -> Dict[str, Union[float, int, str]]:
     return {
         "Scenario": name,
         "Array kW": result.array_kw,
@@ -169,8 +170,8 @@ def build_scenarios(
     result: SimulationResult,
     panel_target: int,
     battery_target: float,
-    weather_profile: WeatherProfile | None = None,
-) -> list[dict[str, float | int | str]]:
+    weather_profile: Optional[WeatherProfile] = None,
+) -> list[Dict[str, Union[float, int, str]]]:
     scenarios = [scenario_row("Current", result)]
 
     demand_match_inputs = replace(
@@ -199,7 +200,7 @@ def build_scenarios(
 def generate_advisor_report(
     inputs: SystemInputs,
     result: SimulationResult,
-    weather_profile: WeatherProfile | None = None,
+    weather_profile: Optional[WeatherProfile] = None,
 ) -> AdvisorReport:
     panel_target = recommended_panel_count(inputs, result)
     battery_target = recommended_battery_kwh(inputs, result)

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, replace
+from typing import Optional, Tuple
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
@@ -99,7 +100,7 @@ def generate_llm_advisor_report(
     result: SimulationResult,
     base_report: AdvisorReport,
     config: LLMAdvisorConfig,
-) -> tuple[AdvisorReport, str | None]:
+) -> Tuple[AdvisorReport, Optional[str]]:
     if not config.enabled:
         return base_report, None
 

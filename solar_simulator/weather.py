@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from typing import Dict, List, Union
 from urllib.parse import urlencode
 from urllib.request import urlopen
 
@@ -11,7 +12,7 @@ GEOCODING_ENDPOINT = "https://geocoding-api.open-meteo.com/v1/search"
 ARCHIVE_ENDPOINT = "https://archive-api.open-meteo.com/v1/archive"
 
 
-def _request_json(endpoint: str, params: dict[str, str | int | float]) -> dict:
+def _request_json(endpoint: str, params: Dict[str, Union[str, int, float]]) -> dict:
     url = f"{endpoint}?{urlencode(params)}"
     with urlopen(url, timeout=30) as response:
         payload = json.loads(response.read().decode("utf-8"))
@@ -32,7 +33,7 @@ def format_location_label(result: dict) -> str:
     return ", ".join(parts)
 
 
-def search_locations(query: str, count: int = 5) -> list[dict[str, str | float]]:
+def search_locations(query: str, count: int = 5) -> List[Dict[str, Union[str, float]]]:
     query = query.strip()
     if len(query) < 2:
         return []
@@ -42,7 +43,7 @@ def search_locations(query: str, count: int = 5) -> list[dict[str, str | float]]
         {"name": query, "count": count, "language": "en", "format": "json"},
     )
 
-    results: list[dict[str, str | float]] = []
+    results: List[Dict[str, Union[str, float]]] = []
     for item in payload.get("results", []):
         results.append(
             {

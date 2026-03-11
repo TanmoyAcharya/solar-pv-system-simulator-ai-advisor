@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Literal
+from typing import Dict, Literal, Optional, Union
 
 
 LoadProfile = Literal["Balanced", "Daytime heavy", "Evening heavy"]
@@ -61,7 +61,7 @@ class WeatherProfile:
     hourly_time: list[str]
     hourly_irradiance_w_m2: list[float]
     hourly_temperature_c: list[float]
-    notes: str | None = None
+    notes: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -99,7 +99,7 @@ class SimulationResult:
     annual_savings: float
     baseline_annual_cost: float
     estimated_capex: float
-    payback_years: float | None
+    payback_years: Optional[float]
     lifetime_savings: float
     lifetime_generation_kwh: float
     co2_offset_tons: float
@@ -107,7 +107,7 @@ class SimulationResult:
     optimal_azimuth_deg: float
     weather_source: str
     resolved_location_name: str
-    weather_year: int | None
+    weather_year: Optional[int]
     peak_period_coverage_pct: float
     annual_battery_charge_from_solar_kwh: float
     annual_grid_charge_kwh: float
@@ -132,7 +132,7 @@ class AdvisorReport:
     recommended_tilt_deg: float
     recommended_azimuth_deg: float
     items: list[AdviceItem]
-    scenarios: list[dict[str, float | int | str]]
+    scenarios: list[Dict[str, Union[float, int, str]]]
     source: str = "Heuristic"
-    model_name: str | None = None
-    note: str | None = None
+    model_name: Optional[str] = None
+    note: Optional[str] = None

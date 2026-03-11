@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 from datetime import date
-from typing import cast
+from typing import Dict, List, Optional, Union, cast
 
 import pandas as pd
 import plotly.graph_objects as go
@@ -158,7 +158,7 @@ def fmt_number(value: float, decimals: int = 0) -> str:
     return f"{value:,.{decimals}f}"
 
 
-def fmt_years(value: float | None) -> str:
+def fmt_years(value: Optional[float]) -> str:
     return "n/a" if value is None else f"{value:.1f} yrs"
 
 
@@ -176,7 +176,7 @@ def metric_card(label: str, value: str, note: str) -> None:
 
 
 @st.cache_data(show_spinner=False)
-def cached_location_search(query: str) -> list[dict[str, str | float]]:
+def cached_location_search(query: str) -> List[Dict[str, Union[str, float]]]:
     return search_locations(query)
 
 
@@ -215,9 +215,9 @@ with st.sidebar:
         use_weather_data = st.toggle("Use real weather data", value=True)
         weather_year = st.slider("Weather year", min_value=2019, max_value=default_weather_year, value=default_weather_year, step=1)
 
-        location_results: list[dict[str, str | float]] = []
-        selected_location: dict[str, str | float] | None = None
-        weather_lookup_error: str | None = None
+        location_results: List[Dict[str, Union[str, float]]] = []
+        selected_location: Optional[Dict[str, Union[str, float]]] = None
+        weather_lookup_error: Optional[str] = None
         if use_weather_data and len(location_query.strip()) >= 2:
             try:
                 location_results = cached_location_search(location_query)
@@ -326,7 +326,7 @@ inputs = SystemInputs(
 
 weather_profile = None
 weather_status = "Using synthetic irradiance based on the monthly model."
-weather_error: str | None = None
+weather_error: Optional[str] = None
 if inputs.weather_mode == "Open-Meteo historical":
     try:
         resolved_name = selected_label or location_query
@@ -339,7 +339,7 @@ if inputs.weather_mode == "Open-Meteo historical":
 result = simulate_system(inputs, weather_profile=weather_profile)
 report = generate_advisor_report(inputs, result, weather_profile=weather_profile)
 
-llm_status: str | None = None
+llm_status: Optional[str] = None
 if advisor_mode == "LLM API":
     report, llm_status = generate_llm_advisor_report(
         inputs,
